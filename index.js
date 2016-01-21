@@ -1,26 +1,19 @@
 'use strict';
 
-// These headers are required according to https://bitbucket.org/javarosa/javarosa/wiki/OpenRosaRequest
-var OpenRosaHeaders = {
-  "X-OpenRosa-Version": "1.0"
+module.exports = function() {
+    return function(req, res, next) {
+        // These headers are required according to https://bitbucket.org/javarosa/javarosa/wiki/OpenRosaRequest
+        res.setHeader('X-OpenRosa-Version', '1.0');
+        res.setHeader('Location', locationUrl(req));
+
+        next();
+    };
 };
 
-module.exports = function(options) {
-  return function(req, res, next) {
-    var err, prop;
+function httpOrHttps(req) {
+    return req.connection.encrypted ? 'https://' : 'http://';
+}
 
-    for (var header in OpenRosaHeaders) {
-      res.setHeader(header, OpenRosaHeaders[header]);
-    }
-
-    for (prop in OpenRosaHeaders) {
-        if (req.headers[prop.toLowerCase()] !== OpenRosaHeaders[prop]) {
-            err = new Error('Request missing required header "' + prop + "'");
-            err.status = 400;
-            return next(err);
-        }
-    }
-    
-    next();
-  };
-};
+function locationUrl(req) {
+    return httpOrHttps(req) + req.headers.host + req.originalUrl;
+}
